@@ -47,31 +47,3 @@ hornlog:c(play_tennis, [
 hornlog:q(play_tennis, [rainy, cool, low, weak], me).
 ```
 
-
-
-
-hornlog:c(hornlog_test, [
-   hornlog:rule(hornlog:id(1), [a])
-]).
-
-
-
-hornlog:c(hornlog_test, [
-   hornlog:rule([a, b, c]),
-   hornlog:rule([a]),
-   hornlog:rule([a, b]),
-   hornlog:rule([a, '_', c]),
-   hornlog:rule([b, 1])
-]).
-
-hornlog:q(hornlog_test, [c], this).
-
-hornlog:c(hornlog_test, [
-   hornlog:rule([a, b, c]),
-   hornlog:rule([a]),
-   hornlog:rule([a, b]),
-   hornlog:rule([a, '_', c]),
-   hornlog:rule([b, 10])
-]).
-
-
