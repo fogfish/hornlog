@@ -10,7 +10,7 @@ u <- (p ^ q ^ ... ^ t)
 
 The rule is defined as implication clause `[p, q, ..., t]`. The rule is true if input pattern is matched. The library uses `'_'` to match any term (e.g. `[p, '_', ..., t]`).   
 
-There are three type of rules: headless, identity and augmented. The _headless_ rule return input subject if pattern is matched `hornlog:rule([p, q, ..., t])`. The _identity_ rule curry term to identity function and return this value with curried value if pattern is matched `hornlog:rule(hornlog:id(u), [p, q, ..., t])`. The _augmented_ rule curries terms to any external function, which is called if pattern is matched `hornlog:rule(hornlog:head(fun myapp:u/2, [u]), [p, q, ..., t])`.
+There are three type of rules: headless, identity and augmented. The _headless_ rule return input subject if pattern is matched `hornlog:rule([p, q, ..., t])`. The _identity_ rule curry term to identity function and return this value if pattern is matched `hornlog:rule(hornlog:id(u), [p, q, ..., t])`. The _augmented_ rule curries terms to any external function, which is called if pattern is matched `hornlog:rule(hornlog:head(fun myapp:u/2, [u]), [p, q, ..., t])`.
 
 ## compile and evaluate 
 

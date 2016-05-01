@@ -17,11 +17,11 @@
 -module(hornlog).
 
 -export([
-   head/2, id/2, id/1,
+   head/2, like/2, id/2, id/1,
    rule/2, 
-   rule/1, 
+   rule/1,
    c/2, 
-   q/3
+   q/2, q/3
 ]).
 
 %%
@@ -34,9 +34,17 @@
 %%
 %% define head of rule by curring argument(s) to the function
 -spec head(function(), [_]) -> head().
+-spec like(function(), [_]) -> head().
 
 head(Fun, List) ->
    curry(
+      lens:get(flens(), lens:pair(module), Fun),
+      lens:get(flens(), lens:pair(name),   Fun),
+      List
+   ).
+
+like(Fun, List) ->
+   curry2(
       lens:get(flens(), lens:pair(module), Fun),
       lens:get(flens(), lens:pair(name),   Fun),
       List
@@ -58,15 +66,25 @@ id(X, Y) ->
 -spec rule(head(), pattern()) -> rule().
 -spec rule(pattern()) -> rule().
 
-rule(Head, Pattern) ->
+rule(Head, Pattern)
+ when is_list(Pattern) ->
    Nary = length(Pattern),
    Wary = length([X || X <- Pattern, X =/= '_']),
    % estimate it arity and weighted arity (number of 'explicit' term match)
-   {{Nary, Wary}, Pattern, Head}.   
+   {{Nary, Wary}, Pattern, Head};
 
-rule(Pattern) ->
+rule(Head, Pattern) ->
+   rule(Head, [Pattern]).
+
+rule(Pattern)
+ when is_list(Pattern) ->
    %% bind identity function to rule head 
-   rule({var, 0, 'X'}, Pattern).
+   rule({var, 0, 'X'}, Pattern);
+
+rule(Pattern)
+ when is_binary(Pattern) ->
+   %% bind identity function to binary suffix 
+   rule({var, 0, 'Y'}, Pattern).
 
 
 %%
@@ -79,10 +97,14 @@ c(Id, Rules) ->
 
 %%
 %% evaluate rules, throws exception if evaluation is failed
+-spec q(atom(), pattern()) -> _.
 -spec q(atom(), pattern(), _) -> _.
 
 q(Id, Pattern, X) ->
    erlang:apply(Id, q, [X | Pattern]).
+
+q(Id, Pattern) ->
+   erlang:apply(Id, q, [Pattern]).
 
 %%%----------------------------------------------------------------------------   
 %%%
@@ -140,6 +162,7 @@ rule_roll_up_arity(Rules) ->
 
 %%
 %% sort rules by it arity
+%% (by number of terms and number of fixed terms) 
 rule_sort_by_arity(Rules) ->
    lists:sort(
       fun(A, B) ->
@@ -163,6 +186,12 @@ curry(Mod, Fun, List) ->
       [erl_parse:abstract(X) || X <- List] ++ [{var, 0, 'X'}]
    }.
 
+curry2(Mod, Fun, List) ->
+   {call, 0,
+      {remote, 0, {atom, 0, Mod}, {atom, 0, Fun}},
+      [erl_parse:abstract(X) || X <- List] ++ [{var, 0, 'X'},{var, 0, 'Y'}]
+   }.
+
 %%
 %% return pattern match clause
 match(Pattern, Body) ->
@@ -174,6 +203,10 @@ match(Pattern, Body) ->
 
 match('_') ->
    {var, 0, '_'};
+match(X)
+ when is_binary(X) ->
+   {bin, 0, List} = erl_parse:abstract(X),
+   {bin, 0, List ++ [{bin_element, 0, {var, 0, 'Y'}, default, [binary]}]};
 match(X)   ->
    erl_parse:abstract(X).
 
