@@ -30,6 +30,8 @@
 -type pattern() :: [_].
 -type rule()    :: _.
 
+%%
+%% @todo: define data structure and lenses here
 
 %%
 %% define head of rule by curring argument(s) to the function
@@ -38,15 +40,15 @@
 
 head(Fun, List) ->
    curry(
-      lens:get(flens(), lens:pair(module), Fun),
-      lens:get(flens(), lens:pair(name),   Fun),
+      lens:get(lmodule(), Fun),
+      lens:get(lname(),   Fun),
       List
    ).
 
 like(Fun, List) ->
    curry2(
-      lens:get(flens(), lens:pair(module), Fun),
-      lens:get(flens(), lens:pair(name),   Fun),
+      lens:get(lmodule(), Fun),
+      lens:get(lname(),   Fun),
       List
    ).
 
@@ -150,10 +152,10 @@ pattern_match([{{Nary, _}, _, _} | _] = Rules) ->
 rule_roll_up_arity([]) ->
    [];
 rule_roll_up_arity(Rules) ->
-   N = lens:get(lens:hd(), lens:t1(), lens:t1(), Rules),
+   N  = lens:get(larity(), Rules),
    {Head, Tail} = lists:splitwith(
       fun(X) ->
-         N =:= lens:get(lens:t1(), lens:t1(), X)
+         N =:= lens:get(lens:c(lens:t1(), lens:t1()), X)
       end,
       Rules
    ),
@@ -177,6 +179,17 @@ flens() ->
    fun(Fun, Function) ->
       lens:fmap(fun(_) -> Function end, Fun( erlang:fun_info(Function) ))
    end.
+
+lmodule() ->
+   lens:c(flens(), lens:pair(module)).
+
+lname() ->
+   lens:c(flens(), lens:pair(name)).
+
+%%
+%% rules arity lens
+larity() ->
+   lens:c(lens:hd(), lens:t1(), lens:t1()).
 
 %%
 %% curry external function
